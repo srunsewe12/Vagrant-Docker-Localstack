@@ -37,9 +37,9 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: myapp
-    command: python manage.py runserver 0.0.0.0:8000
+    command: python manage.py runserver 0.0.0.0:4000
     ports:
-      - "8000:8000"
+      - "4000:4000"
     depends_on:
       - db
       - redis
@@ -59,8 +59,8 @@ services:
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
       - AWS_DEFAULT_REGION=${DEFAULT_REGION:-us-east-1}
-      - LOCALSTACK_URL=http://localstack:4566
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - LOCALSTACK_URL=http://localstack:6895
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:8965
       - OTHER_ENV_VAR=your_value_here
     volumes:
       - .:/app
@@ -80,12 +80,12 @@ services:
       - DJANGO_SETTINGS_MODULE=config.settings
       - DJANGO_DEBUG=True
       - SECRET_KEY=${SECRET_KEY}
-      - BROKER_URL=sqs://test:test@localstack:4566
-      - CELERY_BROKER_URL=sqs://test:test@localstack:4566
+      - BROKER_URL=sqs://test:test@localstack:7895
+      - CELERY_BROKER_URL=sqs://test:test@localstack:5687
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
       - AWS_DEFAULT_REGION=${DEFAULT_REGION:-us-east-1}
-      - LOCALSTACK_URL=http://localstack:4566
+      - LOCALSTACK_URL=http://localstack:5632
       - OTHER_ENV_VAR=your_value_here
     volumes:
       - .:/app
@@ -102,12 +102,12 @@ services:
       - DJANGO_SETTINGS_MODULE=config.settings
       - DJANGO_DEBUG=True
       - SECRET_KEY=${SECRET_KEY}
-      - BROKER_URL=sqs://test:test@localstack:4566
-      - CELERY_BROKER_URL=sqs://test:test@localstack:4566
+      - BROKER_URL=sqs://test:test@localstack:3255
+      - CELERY_BROKER_URL=sqs://test:test@localstack:1254
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
       - AWS_DEFAULT_REGION=${DEFAULT_REGION:-us-east-1}
-      - LOCALSTACK_URL=http://localstack:4566
+      - LOCALSTACK_URL=http://localstack:2354
       - OTHER_ENV_VAR=your_value_here
     volumes:
       - .:/app
@@ -140,11 +140,11 @@ services:
     container_name: kafka
     environment:
       - KAFKA_BROKER_ID=1
-      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
-      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:9856
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:3258
       - ALLOW_PLAINTEXT_LISTENER=yes
     ports:
-      - "9092:9092"
+      - "8092:8092"
     depends_on:
       - zookeeper
 
@@ -154,7 +154,7 @@ services:
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
     ports:
-      - "2181:2181"
+      - "5187:5187"
 
 volumes:
   pgdata:

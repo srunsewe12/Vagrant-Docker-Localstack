@@ -10,21 +10,24 @@ Before you begin, ensure you have the following tools installed on your machine:
 - **Docker and Docker Compose**: [Download Docker](https://www.docker.com/products/docker-desktop)
 - **Vagrant Docker Compose Plugin**: Install with the following command:
 
-  ```bash
-  vagrant plugin install vagrant-docker-compose
+```
+vagrant plugin install vagrant-docker-compose
+```
 
 **Getting Started**
 
 **Clone the Repository**
 
-```bash
+```
 git clone (https://github.com/srunsewe12/Vagrant-Docker-Localstack.git)
 cd Vagrant-Docker-Localstack
+```
 
 **Bring Up the Environment**
 
-```bash
+```
 vagrant up --provider=docker
+```
 
 This command will:
 
@@ -35,29 +38,32 @@ This command will:
 Note: The first time you run this command, it may take several minutes to download all the necessary Docker images.
 
 **Accessing the Application**
-- The Django application should be accessible at http://localhost:8000.
+- The Django application should be accessible at ```http://localhost:8000.```
 - Other services are exposed on their respective ports as defined in the docker-compose.yml file.
 
 **Stopping and Destroying the Environment**
 
 **Stop the environment:**
 
-```bash
+```
 vagrant halt
+```
 
 **Destroy the environment:**
 
-```bash
+```
 vagrant destroy
+```
 
 
 **Services Included**
-**Django Application** (app)
-**Celery Workers** (celery and celery_scheduler)
-**PostgreSQL Database** (db)
-**Redis Cache** (redis)
-**Kafka and Zookeeper** (kafka and zookeeper)
-**Localstack** (localstack): Emulates AWS services locally
+
+**Django Application** (app),
+**Celery Workers** (celery and celery_scheduler),
+**PostgreSQL Database** (db),
+**Redis Cache** (redis),
+**Kafka and Zookeeper** (kafka and zookeeper),
+**Localstack** (localstack): Emulates AWS services locally,
 **Trino** (trino): SQL query engine for distributed data
 
 **Configuration**
@@ -69,23 +75,24 @@ Environment variables are set in the Vagrantfile and passed to the Docker contai
 
 In Vagrantfile:
 
-```bash
-echo "export SECRET_KEY=your_actual_secret_key" >> /etc/environment
+```echo "export SECRET_KEY=your_actual_secret_key" >> /etc/environment```
 
 As a more secure alternative, you can create a .env file in the project root with your environment variables:
 
 
-```bash
+```
 SECRET_KEY=your_actual_secret_key
 DEFAULT_REGION=us-east-1
 DJANGO_DEBUG=True
 OTHER_ENV_VAR=your_value_here
+```
 
 Then, modify the docker-compose.yml to use the .env file:
 
-```bash
+```
 env_file:
-  - .env```
+  - .env
+```
 
 **Dockerfile**
 Make sure you have a Dockerfile in your project root that defines how to build your application image. This repo assumes you have one.
@@ -100,8 +107,9 @@ Feel free to modify the services, environment variables, and configurations to s
 **Troubleshooting**
 1. Service Not Starting: Check the logs for any service by running:
 
-```bash
+```
 docker-compose logs [service_name]
+```
 
 2. Port Conflicts: Double-check that the ports exposed in docker-compose.yml are not already used on your host machine.
 

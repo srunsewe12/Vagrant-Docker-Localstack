@@ -1,0 +1,161 @@
+version: '3.8'
+
+services:
+
+  localstack:
+    image: localstack/localstack:0.14.5
+    container_name: localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=iam,kms,sts,secretsmanager,sqs,cloudwatch,s3
+      - DEBUG=${DEBUG- }
+      - DATA_DIR=/tmp/localstack/data
+      - DEFAULT_REGION=${DEFAULT_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    volumes:
+      - "./localstack_data:/tmp/localstack"
+    healthcheck:
+      test: ["CMD", "awslocal", "s3", "ls"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  trino:
+    image: trinodb/trino:latest
+    container_name: trino
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    volumes:
+      - "./trino-config/catalog:/etc/trino/catalog"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: myapp
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+      - localstack
+      - trino
+      - kafka
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - DJANGO_DEBUG=True
+      - SECRET_KEY=${SECRET_KEY}
+      - DB_HOST=db
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=${DEFAULT_REGION:-us-east-1}
+      - LOCALSTACK_URL=http://localstack:4566
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - OTHER_ENV_VAR=your_value_here
+    volumes:
+      - .:/app
+    depends_on:
+      localstack:
+        condition: service_healthy
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: myapp-celery
+    command: celery -A config worker -l info
+    depends_on:
+      - app
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - DJANGO_DEBUG=True
+      - SECRET_KEY=${SECRET_KEY}
+      - BROKER_URL=sqs://test:test@localstack:4566
+      - CELERY_BROKER_URL=sqs://test:test@localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=${DEFAULT_REGION:-us-east-1}
+      - LOCALSTACK_URL=http://localstack:4566
+      - OTHER_ENV_VAR=your_value_here
+    volumes:
+      - .:/app
+
+  celery_scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: myapp-celery-scheduler
+    command: celery -A config beat -l info
+    depends_on:
+      - app
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - DJANGO_DEBUG=True
+      - SECRET_KEY=${SECRET_KEY}
+      - BROKER_URL=sqs://test:test@localstack:4566
+      - CELERY_BROKER_URL=sqs://test:test@localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=${DEFAULT_REGION:-us-east-1}
+      - LOCALSTACK_URL=http://localstack:4566
+      - OTHER_ENV_VAR=your_value_here
+    volumes:
+      - .:/app
+
+  db:
+    image: postgres:13-alpine
+    container_name: postgres_db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - "pgdata:/var/lib/postgresql/data"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:6-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  kafka:
+    image: bitnami/kafka:latest
+    container_name: kafka
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    container_name: zookeeper
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    ports:
+      - "2181:2181"
+
+volumes:
+  pgdata:
+
